@@ -1,17 +1,11 @@
-import React from "react";
-import {
-  FlatList,
-  View,
-  ActivityIndicator,
-  Text,
-  Button,
-  DatePickerAndroid
-} from "react-native";
-import { SecureStore } from "expo";
+import React from 'react';
+import { FlatList, View, ActivityIndicator, Text, Button, DatePickerAndroid } from 'react-native';
+import { SecureStore } from 'expo';
+import { MonthName } from '../components/MonthName';
 
 export default class MetaDiaria extends React.Component {
   static navigationOptions = {
-    title: "Meta diária"
+    title: 'Meta diária',
   };
   constructor(props) {
     super(props);
@@ -23,7 +17,7 @@ export default class MetaDiaria extends React.Component {
       statusCode: 0,
       data: [],
       current: 0,
-      limit: 0
+      limit: 0,
     };
   }
 
@@ -31,25 +25,25 @@ export default class MetaDiaria extends React.Component {
     const { action, year, month, day } = await DatePickerAndroid.open({
       // Use `new Date()` for current date.
       // May 25 2020. Month 0 is January.
-      date: new Date()
+      date: new Date(),
     });
     if (action !== DatePickerAndroid.dismissedAction) {
       // Selected year, month (0-11), day
 
       this.setState({
         month: month,
-        year: year
+        year: year,
       });
       this._start();
     }
   };
 
   _getApiData = async () => {
-    const token = await SecureStore.getItemAsync("secure_token");
+    const token = await SecureStore.getItemAsync('secure_token');
 
     let headers = {
-      "Content-Type": "application/json",
-      Authorization: "JWT " + token
+      'Content-Type': 'application/json',
+      Authorization: 'JWT ' + token,
     };
 
     year = this.state.year;
@@ -60,34 +54,29 @@ export default class MetaDiaria extends React.Component {
     endDate.setMonth(month + 1, 0);
     firstDate = new Date(year, month, 1);
 
-
     stringEndDate =
-      endDate.getFullYear() +
-      "-" +
-      (endDate.getMonth() + 1) +
-      "-" +
-      endDate.getDate();
-    stringFirstDate = year + "-" + (month + 1) + "-01";
+      endDate.getFullYear() + '-' + (endDate.getMonth() + 1) + '-' + endDate.getDate();
+    stringFirstDate = year + '-' + (month + 1) + '-01';
 
     url =
-      "http://www.iluvatar.com.br/api/v1/records/?format=json&create_date_time_after=" +
+      'http://www.iluvatar.com.br/api/v1/records/?format=json&create_date_time_after=' +
       stringFirstDate +
-      "&create_date_time_before=" +
+      '&create_date_time_before=' +
       stringEndDate +
-      "&type_entry__id=1";
+      '&type_entry__id=1';
 
     let response = await fetch(url, { headers });
     let json_data = await response.json();
 
     this.setState({
       statusCode: response.status,
-      data: json_data
+      data: json_data,
     });
   };
 
   _build_data_list = () => {
     function formatdate(stingdate) {
-      return stingdate.split("T")[0].split("-")[2];
+      return stingdate.split('T')[0].split('-')[2];
     }
 
     data = this.state.data;
@@ -95,8 +84,7 @@ export default class MetaDiaria extends React.Component {
 
     data.forEach(element => {
       if (new_data[element.create_date_time]) {
-        new_data[element.create_date_time] =
-          new_data[element.create_date_time] + +element.debit;
+        new_data[element.create_date_time] = new_data[element.create_date_time] + +element.debit;
       } else {
         new_data[element.create_date_time] = +element.debit;
       }
@@ -106,7 +94,7 @@ export default class MetaDiaria extends React.Component {
     Object.keys(new_data).forEach(function(key) {
       o = {
         db_included_date_time: formatdate(key),
-        debit: new_data[key]
+        debit: new_data[key],
       };
 
       new_a.push(o);
@@ -127,7 +115,7 @@ export default class MetaDiaria extends React.Component {
       isLoading: false,
       dataSource: new_a,
       limit: limitVal,
-      current: currentVal
+      current: currentVal,
     });
   };
 
@@ -137,12 +125,12 @@ export default class MetaDiaria extends React.Component {
 
       if (statusCode == 401) {
         const { navigate } = this.props.navigation;
-        navigate("Login");
+        navigate('Login');
         return;
       }
 
       if (statusCode != 200) {
-        console.log("erro");
+        console.log('erro');
         console.log(statusCode);
         return;
       }
@@ -166,7 +154,7 @@ export default class MetaDiaria extends React.Component {
     return (
       <View style={{ flex: 1, paddingTop: 20 }}>
         <Button title="Selecione a Data" onPress={() => this._selectDate()} />
-        <Text>{this.state.month + 1}</Text>
+        <MonthName m={this.state.month} />
         <FlatList
           data={this.state.dataSource}
           renderItem={({ item }) => (

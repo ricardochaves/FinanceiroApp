@@ -1,6 +1,16 @@
 import React from 'react';
-import { FlatList, View, ActivityIndicator, Text, Button, DatePickerAndroid } from 'react-native';
+import {
+  FlatList,
+  View,
+  ActivityIndicator,
+  Text,
+  Button,
+  DatePickerAndroid,
+  Picker,
+} from 'react-native';
 import { SecureStore } from 'expo';
+import { MonthName } from '../components/MonthName';
+import { CategoryPicker } from '../components/CategoryPicker';
 
 export default class Category extends React.Component {
   static navigationOptions = {
@@ -16,6 +26,8 @@ export default class Category extends React.Component {
       year: d.getFullYear(),
       statusCode: 0,
       data: [],
+      category: 'all',
+      categorys: [],
     };
   }
 
@@ -49,6 +61,11 @@ export default class Category extends React.Component {
     endDate.setMonth(month + 1, 0);
     firstDate = new Date(year, month, 1);
 
+    catId = '';
+    if (this.state.category != 'all') {
+      catId = this.state.category;
+    }
+
     stringEndDate =
       endDate.getFullYear() + '-' + (endDate.getMonth() + 1) + '-' + endDate.getDate();
     stringFirstDate = year + '-' + (month + 1) + '-01';
@@ -57,7 +74,9 @@ export default class Category extends React.Component {
       'http://www.iluvatar.com.br/api/v1/records/?format=json&create_date_time_after=' +
       stringFirstDate +
       '&create_date_time_before=' +
-      stringEndDate;
+      stringEndDate +
+      '&category__id=' +
+      catId;
 
     let response = await fetch(url, { headers });
     let json_data = await response.json();
@@ -123,6 +142,12 @@ export default class Category extends React.Component {
     this._start();
   }
 
+  _test(a) {
+    this.setState({
+      category: a,
+    });
+    console.log(a);
+  }
   render() {
     if (this.state.isLoading) {
       return (
@@ -134,7 +159,13 @@ export default class Category extends React.Component {
     return (
       <View style={{ flex: 1, paddingTop: 20 }}>
         <Button title="Selecione a Data" onPress={() => this._selectDate()} />
-        <Text>{this.state.month + 1}</Text>
+
+        <CategoryPicker
+          selectedValue={this.state.category}
+          onValueChange={(itemValue, itemIndex) => this._test(itemValue)}
+        />
+
+        <MonthName m={this.state.month} />
         <FlatList
           data={this.state.dataSource}
           renderItem={({ item }) => (
